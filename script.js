@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherIconEl = document.getElementById('weather-icon');
     const weatherTextEl = document.getElementById('weather-text');
 
-    // --- GAME CONFIG & DATA (REBALANCED) ---
+    // --- GAME CONFIG & DATA ---
     const BOARD_SIZE = 4;
     const LEVEL_EXP_BASE = 100;
     const PRESTIGE_LEVEL = 50;
@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
         bingo_marker: { name: 'ปากกาบิงโก', desc: 'คลิกใช้แล้วเลือกช่องที่ต้องการทำให้สำเร็จฟรี', cost: 1000 }
     };
     const SKILLS = {
-        phys: { name: 'ฟิสิกส์', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 1}, {desc: 'โบนัส Bingo x1.2', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 2}, {desc: 'ปลดล็อกท่าไม้ตายฟิสิกส์', cost: 3}] },
-        math: { name: 'คณิตศาสตร์', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 1}, {desc: 'ปลดล็อก Combo Gauge', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 2}, {desc: 'เพิ่มโบนัสจาก Combo', cost: 3}] },
-        read: { name: 'การอ่าน', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 1}, {desc: 'มีโอกาส 20% ได้รับ Coins 2 เท่า', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 2}, {desc: 'ลดเงื่อนไขเควสต์เวลา 10%', cost: 3}] }
+        phys: { name: 'ฟิสิกส์', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 2}, {desc: 'โบนัส Bingo x1.2', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 3}, {desc: 'ปลดล็อกท่าไม้ตายฟิสิกส์', cost: 3}] },
+        math: { name: 'คณิตศาสตร์', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 2}, {desc: 'ปลดล็อก Combo Gauge', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 3}, {desc: 'เพิ่มโบนัสจาก Combo', cost: 3}] },
+        read: { name: 'การอ่าน', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 2}, {desc: 'มีโอกาส 20% ได้รับ Coins 2 เท่า', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 3}, {desc: 'ลดเงื่อนไขเควสต์เวลา 10%', cost: 3}] }
     };
     const STUDY_WEATHER = {
         clear: { id: 'clear', icon: '☀️', text: 'วันที่ปลอดโปร่ง' },
@@ -66,10 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- CORE FUNCTIONS ---
-    function saveData() { localStorage.setItem('studyBingoFinal_v1', JSON.stringify({player, board})); }
+    function saveData() { localStorage.setItem('studyBingoFinal_v3', JSON.stringify({player, board})); }
     
     function loadData() {
-        const saved = localStorage.getItem('studyBingoFinal_v1');
+        const saved = localStorage.getItem('studyBingoFinal_v3');
         if (saved) {
             const gameState = JSON.parse(saved);
             player = gameState.player;
@@ -129,8 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let classes = 'cell';
             if (task.completed) classes += ' completed';
             if (task.isChallenge && !task.completed) classes += ' challenge';
-            if (player.weather.id === 'fog' && !task.completed && Math.random() < 0.25) classes += ' fog';
-
+            if (player.weather.id === 'fog' && !task.completed) {
+                const neighbors = [-1, 1, -4, 4].map(offset => task.index + offset);
+                if (neighbors.every(n_idx => n_idx < 0 || n_idx >= 16 || !board[n_idx].completed)) {
+                    classes += ' fog';
+                }
+            }
             return `<div class="${classes}" data-index="${task.index}">
                 <span class="task-text">${task.text}</span>
                 <span class="task-subject">${task.subject}</span>
@@ -191,13 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (player.exp >= maxExp) {
             player.exp -= maxExp;
             player.level++;
-            player.skillPoints += 1; // Base SP gain
-            if (player.level % 5 === 0) { // Bonus SP
-                player.skillPoints += 1;
-                showNotice(`LEVEL UP! LV ${player.level}<br>ได้รับ SP +2!`);
-            } else {
-                showNotice(`LEVEL UP! <br> LV ${player.level}`);
-            }
+            let spGain = 1;
+            if (player.level % 5 === 0) spGain++;
+            player.skillPoints += spGain;
+            showNotice(`LEVEL UP! LV ${player.level}<br>ได้รับ SP +${spGain}!`);
         }
         updateUI();
     }
@@ -222,8 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (bingoFound) {
-            let bonusCoins = 100; // Bingo Bonus
-            let bonusExp = 50;   // New Bingo EXP Bonus
+            let bonusCoins = 100;
+            let bonusExp = 50;
             if(player.skills.phys >= 3) bonusCoins *= 1.2;
             
             player.coins += Math.round(bonusCoins);
@@ -269,15 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentLevel = player.skills[key];
                 return `<div class="skill-branch">
                     <h4>${skill.name} (LV ${currentLevel})</h4>
-                    ${skill.levels.map((level, i) => {
+                    ${skill.levels.map((levelData, i) => {
                         const levelNum = i + 1;
                         let classes = 'skill-node';
                         if (currentLevel >= levelNum) classes += ' unlocked';
                         if (currentLevel >= skill.maxLevel) classes += ' maxed';
-                        const cost = level.cost || 1;
+                        const cost = levelData.cost || 1;
                         return `<div class="${classes}" data-skill-key="${key}" data-skill-level="${levelNum}" data-skill-cost="${cost}">
-                            <p>LV ${levelNum}: ${level.desc}</p>
-                            <span class="cost">${(currentLevel + 1 === levelNum && player.skillPoints >= cost) ? `ปลดล็อก: ${cost} SP` : ''}</span>
+                            <p>LV ${levelNum}: ${levelData.desc}</p>
+                            <span class="cost">${(currentLevel + 1 === levelNum) ? `(ต้องการ ${cost} SP)` : ''}</span>
                         </div>`;
                     }).join('')}
                 </div>`;
@@ -331,11 +332,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('marking');
             renderBoard();
             checkForBingo();
-            saveData();
             return;
         }
         
         task.completed = true;
+        renderBoard(); // Render first to show completion
         addExp(QUEST_TIERS[task.tier].points, task.subject);
         if(task.isChallenge && task.accepted) {
             showNotice("สำเร็จเควสต์ท้าทาย! รางวัลใหญ่!");
@@ -343,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
             player.skillPoints += 1;
             player.challengeQuest = null;
         }
-        renderBoard();
         checkForBingo();
     }
 
@@ -373,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleModalClick(e) {
+        // Shop logic
         const buyBtn = e.target.closest('.buy-btn');
         if (buyBtn) {
             const itemId = buyBtn.dataset.itemId;
@@ -383,8 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateUI();
                 openShopModal();
             }
+            return; // Stop further processing
         }
 
+        // Skill logic
         const skillNode = e.target.closest('.skill-node');
         if (skillNode && !skillNode.classList.contains('unlocked') && !skillNode.classList.contains('maxed')) {
             const key = skillNode.dataset.skillKey;
@@ -420,9 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
             player.lastLogin = oldLastLogin;
 
             showNotice(`จุติสำเร็จ! ระดับ ${player.prestige}`);
+            closeModal();
             generateBoard();
             updateUI();
-            closeModal();
         };
     }
 
@@ -438,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newBoardBtn.classList.add('hidden');
     });
     modalContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('close-modal-btn') || e.target === modalContainer) {
+        if (e.target === modalContainer || e.target.classList.contains('close-modal-btn')) {
             closeModal();
         }
     });
