@@ -23,6 +23,9 @@ body {
     justify-content: center;
     height: 100vh;
     padding: 10px;
+}
+
+body.modal-open {
     overflow: hidden;
 }
 
@@ -95,11 +98,15 @@ button {
 button:hover, button:focus { background-color: var(--accent-color); color: var(--accent-hover); }
 button:disabled { background: transparent; border-color: var(--disabled-color); color: var(--disabled-color); cursor: not-allowed; }
 
+#new-board-btn.hidden {
+    display: none;
+}
+
 /* Modal Styles */
 .modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.3s ease; }
 .modal-container.hidden { display: none; }
 .modal-content { background-color: var(--surface-color); padding: 25px; border-radius: 15px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid #444; }
-.close-modal-btn { position: absolute; top: 10px; right: 15px; font-size: 2em; background: none; border: none; color: var(--secondary-text); cursor: pointer; }
+.close-modal-btn { position: absolute; top: 10px; right: 15px; font-size: 2em; background: none; border: none; color: var(--secondary-text); cursor: pointer; z-index: 101; }
 #modal-title { margin-bottom: 20px; text-align: center; color: var(--accent-color); }
 
 /* Notifications */
@@ -107,8 +114,8 @@ button:disabled { background: transparent; border-color: var(--disabled-color); 
 #level-up-notice.hidden { display: none; }
 
 /* Skill & Shop Styles */
-.skill-tree-container, .shop-container { display: flex; justify-content: space-around; gap: 15px; }
-.skill-branch { flex: 1; text-align: center; }
+.skill-tree-container { display: flex; flex-direction: column; gap: 15px; }
+.skill-branch { text-align: center; border: 1px solid #333; padding: 10px; border-radius: 8px;}
 .skill-branch h4 { margin-bottom: 15px; }
 .skill-node { background: #333; border: 1px solid #555; margin-bottom: 10px; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
 .skill-node.unlocked { border-color: var(--success-color); background: #28442a; }

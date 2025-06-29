@@ -11,6 +11,7 @@ const modalContainer = document.getElementById('modal-container');
 const modalTitleEl = document.getElementById('modal-title');
 const modalBodyEl = document.getElementById('modal-body');
 const levelUpNoticeEl = document.getElementById('level-up-notice');
+const newBoardBtn = document.getElementById('new-board-btn');
 
 // --- GAME CONFIG & DATA ---
 const BOARD_SIZE = 4;
@@ -19,7 +20,7 @@ const QUEST_TIERS = {
     'C': { points: 10 }, 'B': { points: 20 }, 'A': { points: 40 }, 'S': { points: 80 }
 };
 const SHOP_ITEMS = {
-    reroll: { name: 'ตั๋วสุ่มเควสต์ใหม่', desc: 'สุ่มเควสต์ 1 ช่องบนบอร์ด', cost: 75 },
+    reroll: { name: 'ตั๋วสุ่มเควสต์ใหม่', desc: 'ยังไม่สามารถใช้งานได้', cost: 75 },
     exp_potion: { name: 'ขวดยา EXP', desc: 'ได้รับ 50 EXP ทันที', cost: 150 }
 };
 const SKILLS = {
@@ -42,25 +43,19 @@ const defaultPlayer = () => ({
 
 const defaultTasks = () => ({
     phys: [
-        { text: 'ทำโจทย์การเคลื่อนที่', tier: 'B', subject: 'ฟิสิกส์' },
-        { text: 'สรุปสูตรไฟฟ้า', tier: 'A', subject: 'ฟิสิกส์' },
-        { text: 'ดูคลิปติวเรื่องคลื่น', tier: 'C', subject: 'ฟิสิกส์' },
-        { text: 'ทำข้อสอบเก่า', tier: 'S', subject: 'ฟิสิกส์' },
+        { text: 'ทำโจทย์การเคลื่อนที่', tier: 'B', subject: 'ฟิสิกส์' }, { text: 'สรุปสูตรไฟฟ้า', tier: 'A', subject: 'ฟิสิกส์' },
+        { text: 'ดูคลิปติวเรื่องคลื่น', tier: 'C', subject: 'ฟิสิกส์' }, { text: 'ทำข้อสอบเก่า', tier: 'S', subject: 'ฟิสิกส์' },
     ],
     math: [
-        { text: 'แก้สมการ', tier: 'C', subject: 'คณิตศาสตร์' },
-        { text: 'ทำโจทย์แคลคูลัส', tier: 'B', subject: 'คณิตศาสตร์' },
-        { text: 'พิสูจน์ทฤษฎีบท', tier: 'A', subject: 'คณิตศาสตร์' },
-        { text: 'ทำโจทย์สถิติ', tier: 'B', subject: 'คณิตศาสตร์' },
+        { text: 'แก้สมการ', tier: 'C', subject: 'คณิตศาสตร์' }, { text: 'ทำโจทย์แคลคูลัส', tier: 'B', subject: 'คณิตศาสตร์' },
+        { text: 'พิสูจน์ทฤษฎีบท', tier: 'A', subject: 'คณิตศาสตร์' }, { text: 'ทำโจทย์สถิติ', tier: 'B', subject: 'คณิตศาสตร์' },
     ],
     read: [
-        { text: 'อ่านหนังสือเรียน', tier: 'C', subject: 'การอ่าน' },
-        { text: 'สรุปเนื้อหาที่อ่าน', tier: 'B', subject: 'การอ่าน' },
-        { text: 'ท่องศัพท์/คำนิยาม', tier: 'A', subject: 'การอ่าน' },
-        { text: 'ทำ Mind Map', tier: 'B', subject: 'การอ่าน' },
+        { text: 'อ่านหนังสือเรียน', tier: 'C', subject: 'การอ่าน' }, { text: 'สรุปเนื้อหาที่อ่าน', tier: 'B', subject: 'การอ่าน' },
+        { text: 'ท่องศัพท์/คำนิยาม', tier: 'A', subject: 'การอ่าน' }, { text: 'ทำ Mind Map', tier: 'B', subject: 'การอ่าน' },
     ]
 });
-let tasks = defaultTasks(); // Tasks are now fixed, not saved/loaded
+let tasks = defaultTasks();
 
 // --- CORE FUNCTIONS ---
 function saveData() { localStorage.setItem('studyBingoData', JSON.stringify(player)); }
@@ -111,6 +106,7 @@ function updateUI() {
     coinsEl.innerText = `🪙 ${player.coins}`;
     skillPointsEl.innerText = player.skillPoints;
     renderInventory();
+    saveData();
 }
 
 function renderInventory() {
@@ -123,7 +119,6 @@ function renderInventory() {
 
 function addExp(basePoints, subject) {
     let finalPoints = basePoints;
-    // Apply skill bonus
     if (subject === 'ฟิสิกส์' && player.skills.phys > 0) finalPoints *= 1.1;
     if (subject === 'คณิตศาสตร์' && player.skills.math > 0) finalPoints *= 1.1;
     if (subject === 'การอ่าน' && player.skills.read > 0) finalPoints *= 1.1;
@@ -139,7 +134,6 @@ function addExp(basePoints, subject) {
         levelUp();
     }
     updateUI();
-    saveData();
 }
 
 function levelUp() {
@@ -154,25 +148,76 @@ function checkForBingo() {
     lines.forEach(line => {
         if (line.every(index => board[index].completed)) {
             bingoCount++;
-            line.forEach(index => boardEl.children[index].classList.add('bingo'));
+            line.forEach(index => {
+                const cell = boardEl.querySelector(`[data-index='${index}']`);
+                if(cell) cell.classList.add('bingo');
+            });
         }
     });
     if (bingoCount > 0) {
         player.coins += (50 * bingoCount);
-        // Add bingo notice if desired
+        newBoardBtn.classList.remove('hidden');
+        updateUI();
     }
 }
 
-// --- EVENT HANDLERS ---
+// --- MODAL & EVENT HANDLERS ---
+function showModal(title, content) {
+    modalTitleEl.innerText = title;
+    modalBodyEl.innerHTML = content;
+    modalContainer.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+    modalContainer.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+}
+
+function openShopModal() {
+    const content = `<div class="shop-container">
+        ${Object.keys(SHOP_ITEMS).map(key => `
+            <div class="shop-item">
+                <div>
+                    <p>${SHOP_ITEMS[key].name}</p>
+                    <p class="item-desc">${SHOP_ITEMS[key].desc}</p>
+                </div>
+                <button class="buy-btn" data-item-id="${key}" ${player.coins < SHOP_ITEMS[key].cost ? 'disabled' : ''}>${SHOP_ITEMS[key].cost} 🪙</button>
+            </div>
+        `).join('')}
+    </div>`;
+    showModal('ร้านค้า', content);
+}
+
+function openSkillsModal() {
+    const content = `<div class="skill-tree-container">
+        ${Object.keys(SKILLS).map(key => {
+            const skill = SKILLS[key];
+            const currentLevel = player.skills[key];
+            return `<div class="skill-branch">
+                <h4>${skill.name} (LV ${currentLevel})</h4>
+                ${skill.levels.map((level, i) => {
+                    const levelNum = i + 1;
+                    let classes = 'skill-node';
+                    if (currentLevel >= levelNum) classes += ' unlocked';
+                    if (currentLevel === skill.maxLevel) classes += ' maxed';
+                    return `<div class="${classes}" data-skill-key="${key}" data-skill-level="${levelNum}">
+                        <p>LV ${levelNum}: ${level.desc}</p>
+                        <span class="cost">${(currentLevel + 1 === levelNum && player.skillPoints > 0) ? 'ปลดล็อก: 1 SP' : ''}</span>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }).join('')}
+    </div>`;
+    showModal(`สกิล (คุณมี ${player.skillPoints} SP)`, content);
+}
+
 function handleBoardClick(e) {
     const cell = e.target.closest('.cell');
     if (!cell || cell.classList.contains('completed')) return;
-
     const index = parseInt(cell.dataset.index);
     const task = board[index];
     task.completed = true;
-    cell.classList.add('completed');
-
     addExp(QUEST_TIERS[task.tier].points, task.subject);
     checkForBingo();
 }
@@ -180,95 +225,40 @@ function handleBoardClick(e) {
 function handleInventoryClick(e) {
     const itemEl = e.target.closest('.inventory-item');
     if (!itemEl) return;
-
     const itemId = itemEl.dataset.itemId;
     if (player.inventory[itemId] > 0) {
         player.inventory[itemId]--;
-        if (itemId === 'exp_potion') {
-            addExp(50, 'Bonus');
-        }
+        if (itemId === 'exp_potion') { addExp(50, 'Bonus'); }
+        // Add logic for reroll ticket here later
         updateUI();
-        saveData();
     }
-}
-
-// --- MODAL FUNCTIONS ---
-function showModal(title, content) {
-    modalTitleEl.innerText = title;
-    modalBodyEl.innerHTML = content;
-    modalContainer.classList.remove('hidden');
-}
-
-function openShopModal() {
-    const content = `
-        <div class="shop-container">
-            ${Object.keys(SHOP_ITEMS).map(key => `
-                <div class="shop-item">
-                    <div>
-                        <p>${SHOP_ITEMS[key].name}</p>
-                        <p class="item-desc">${SHOP_ITEMS[key].desc}</p>
-                    </div>
-                    <button class="buy-btn" data-item-id="${key}" ${player.coins < SHOP_ITEMS[key].cost ? 'disabled' : ''}>${SHOP_ITEMS[key].cost} 🪙</button>
-                </div>
-            `).join('')}
-        </div>`;
-    showModal('ร้านค้า', content);
-}
-
-function openSkillsModal() {
-    const content = `
-        <div class="skill-tree-container">
-            ${Object.keys(SKILLS).map(key => {
-                const skill = SKILLS[key];
-                const currentLevel = player.skills[key];
-                return `
-                    <div class="skill-branch">
-                        <h4>${skill.name} (LV ${currentLevel})</h4>
-                        ${skill.levels.map((level, i) => {
-                            const levelNum = i + 1;
-                            let classes = 'skill-node';
-                            if (currentLevel >= levelNum) classes += ' unlocked';
-                            if (currentLevel === skill.maxLevel && currentLevel >= levelNum) classes += ' maxed';
-                            return `
-                                <div class="${classes}" data-skill-key="${key}" data-skill-level="${levelNum}">
-                                    <p>LV ${levelNum}: ${level.desc}</p>
-                                    <span class="cost">${currentLevel + 1 === levelNum ? 'ปลดล็อก: 1 SP' : ''}</span>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            }).join('')}
-        </div>`;
-    showModal(`สกิล (คุณมี ${player.skillPoints} SP)`, content);
 }
 
 function handleModalClick(e) {
     // Shop logic
     const buyBtn = e.target.closest('.buy-btn');
     if (buyBtn) {
+        buyBtn.disabled = true;
         const itemId = buyBtn.dataset.itemId;
         const item = SHOP_ITEMS[itemId];
         if (player.coins >= item.cost) {
             player.coins -= item.cost;
             player.inventory[itemId]++;
             updateUI();
-            saveData();
-            openShopModal(); // Refresh modal
+            openShopModal();
         }
     }
 
     // Skill logic
     const skillNode = e.target.closest('.skill-node');
-    if (skillNode && !skillNode.classList.contains('unlocked')) {
+    if (skillNode && !skillNode.classList.contains('unlocked') && !skillNode.classList.contains('maxed')) {
         const key = skillNode.dataset.skillKey;
         const level = parseInt(skillNode.dataset.skillLevel);
         if (player.skillPoints > 0 && player.skills[key] === level - 1) {
             player.skillPoints--;
             player.skills[key]++;
             updateUI();
-            saveData();
-            openSkillsModal(); // Refresh modal
+            openSkillsModal();
         }
     }
 }
@@ -276,10 +266,20 @@ function handleModalClick(e) {
 // --- EVENT LISTENERS ---
 boardEl.addEventListener('click', handleBoardClick);
 inventoryItemsEl.addEventListener('click', handleInventoryClick);
-document.querySelector('.close-modal-btn').addEventListener('click', () => modalContainer.classList.add('hidden'));
 document.getElementById('shop-btn').addEventListener('click', openShopModal);
 document.getElementById('skill-btn').addEventListener('click', openSkillsModal);
+modalContainer.addEventListener('click', (e) => {
+    if (e.target === modalContainer || e.target.classList.contains('close-modal-btn')) {
+        closeModal();
+    }
+});
 modalBodyEl.addEventListener('click', handleModalClick);
+newBoardBtn.addEventListener('click', () => {
+    player.coins += 25; // Board clear bonus
+    updateUI();
+    generateBoard();
+    newBoardBtn.classList.add('hidden');
+});
 
 // --- INITIALIZATION ---
 function init() {
