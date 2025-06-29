@@ -18,17 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const weatherDisplayEl = document.getElementById('weather-display');
     const weatherIconEl = document.getElementById('weather-icon');
     const weatherTextEl = document.getElementById('weather-text');
-
-    // --- GAME CONFIG & DATA ---
+    
+    // --- APP-WIDE PAGE SELECTORS (NEW) ---
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const backButtons = document.querySelectorAll('.back-btn');
+    
+    // --- GAME CONFIG & DATA (REBALANCED) ---
     const BOARD_SIZE = 4;
     const LEVEL_EXP_BASE = 100;
     const PRESTIGE_LEVEL = 50;
     const PRE_PRESTIGE_RANGE = 5;
     const QUEST_TIERS = { 'C': { points: 15 }, 'B': { points: 25 }, 'A': { points: 50 }, 'S': { points: 100 } };
     const SHOP_ITEMS = {
-        reroll: { name: 'ตั๋วสุ่มเควสต์ใหม่', desc: 'คลิกใช้แล้วเลือกช่องที่ต้องการสุ่มใหม่', cost: 250 },
-        exp_potion: { name: 'ขวดยา EXP', desc: 'ได้รับ 100 EXP ทันที', cost: 500 },
-        bingo_marker: { name: 'ปากกาบิงโก', desc: 'คลิกใช้แล้วเลือกช่องที่ต้องการทำให้สำเร็จฟรี', cost: 1000 }
+        reroll: { name: 'ตั๋วสุ่มเควสต์ใหม่', desc: 'คลิกใช้แล้วเลือกช่องที่ต้องการสุ่มใหม่', cost: 200 },
+        exp_potion: { name: 'ขวดยา EXP', desc: 'ได้รับ 100 EXP ทันที', cost: 400 },
+        bingo_marker: { name: 'ปากกาบิงโก', desc: 'คลิกใช้แล้วเลือกช่องที่ต้องการทำให้สำเร็จฟรี', cost: 850 }
     };
     const SKILLS = {
         phys: { name: 'ฟิสิกส์', maxLevel: 5, levels: [{desc: '+10% EXP', cost: 1}, {desc: '+15% Coins', cost: 2}, {desc: 'โบนัส Bingo x1.2', cost: 2}, {desc: '+10% โอกาสได้ไอเทม', cost: 3}, {desc: 'ปลดล็อกท่าไม้ตายฟิสิกส์', cost: 3}] },
@@ -66,17 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- CORE FUNCTIONS ---
-    function saveData() { localStorage.setItem('studyBingoFinal_v3', JSON.stringify({player, board})); }
+    function saveData() { localStorage.setItem('studyBingoFlow_v2', JSON.stringify({player, board})); }
     
     function loadData() {
-        const saved = localStorage.getItem('studyBingoFinal_v3');
+        const saved = localStorage.getItem('studyBingoFlow_v2');
         if (saved) {
             const gameState = JSON.parse(saved);
             player = gameState.player;
             board = gameState.board;
-            if (!board || board.length !== 16) {
-                generateBoard();
-            }
+            if (!board || board.length !== 16) generateBoard();
         } else {
             player = defaultPlayer();
             generateBoard();
@@ -337,13 +339,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         task.completed = true;
         renderBoard(); // Render first to show completion
-        addExp(QUEST_TIERS[task.tier].points, task.subject);
         if(task.isChallenge && task.accepted) {
             showNotice("สำเร็จเควสต์ท้าทาย! รางวัลใหญ่!");
             player.coins += 500;
             player.skillPoints += 1;
             player.challengeQuest = null;
         }
+        addExp(QUEST_TIERS[task.tier].points, task.subject);
         checkForBingo();
     }
 
@@ -373,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleModalClick(e) {
-        // Shop logic
         const buyBtn = e.target.closest('.buy-btn');
         if (buyBtn) {
             const itemId = buyBtn.dataset.itemId;
@@ -384,10 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateUI();
                 openShopModal();
             }
-            return; // Stop further processing
+            return;
         }
 
-        // Skill logic
         const skillNode = e.target.closest('.skill-node');
         if (skillNode && !skillNode.classList.contains('unlocked') && !skillNode.classList.contains('maxed')) {
             const key = skillNode.dataset.skillKey;
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newBoardBtn.classList.add('hidden');
     });
     modalContainer.addEventListener('click', (e) => {
-        if (e.target === modalContainer || e.target.classList.contains('close-modal-btn')) {
+        if (e.target.classList.contains('close-modal-btn') || e.target === modalContainer) {
             closeModal();
         }
     });

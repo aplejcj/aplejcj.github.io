@@ -66,7 +66,7 @@ body.marking .cell:not(.completed) { cursor: crosshair; border-style: dotted; bo
     backdrop-filter: blur(5px);
     padding: 8px 15px;
     border-radius: 20px;
-    font-size: clamp(0.9em, 2.5vw, 1em);
+    font-size: 1em;
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -131,7 +131,7 @@ button:disabled { background: var(--surface-color); border-color: var(--disabled
 #modal-body .danger-btn { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
 
 /* Notifications */
-#game-notice { position: fixed; top: 50%; left: 50%; background: linear-gradient(45deg, var(--accent-color), var(--warning-color)); color: white; padding: 20px 40px; border-radius: 50px; font-size: clamp(1.5em, 5vw, 2.5em); font-weight: 700; z-index: 200; animation: levelUpAnimation 2.5s ease forwards; transform-origin: center center; text-align: center; }
+#game-notice { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: linear-gradient(45deg, var(--accent-color), var(--warning-color)); color: white; padding: 20px 40px; border-radius: 50px; font-size: clamp(1.5em, 5vw, 2.5em); font-weight: 700; z-index: 200; animation: levelUpAnimation 2.5s ease forwards; text-align: center; }
 #game-notice.hidden { display: none; }
 
 /* Skill & Shop Styles */
