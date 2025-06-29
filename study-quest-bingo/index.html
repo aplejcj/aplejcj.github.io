@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Quest Bingo</title>
+    <title>Study Quest Bingo: Final</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,37 +11,50 @@
 </head>
 <body>
     <div class="background-animation"></div>
-
-    <div id="player-stats">
-        <div class="stat-item">
-            <span>LV</span>
-            <span id="level">1</span>
-        </div>
-        <div class="stat-item exp-bar-container">
-            <div id="exp-bar"></div>
-            <span id="exp-text">0/100</span>
-        </div>
-        <div class="stat-item">
-            <span title="เล่นต่อเนื่อง" id="streak">🔥 0</span>
-        </div>
-        <div class="stat-item">
-            <span title="Study Coins" id="coins">🪙 0</span>
-        </div>
-    </div>
-
-    <div id="board-container">
-        <div id="bingo-board"></div>
-    </div>
-    
-    <div id="inventory-display">
-        <h3>ไอเทม</h3>
-        <div id="inventory-items"></div>
-    </div>
-
-    <div id="controls">
-        <button id="skill-btn">สกิล (<span id="skill-points-display">0</span>)</button>
-        <button id="shop-btn">ร้านค้า</button>
-        <button id="new-board-btn" class="hidden">เริ่มบอร์ดใหม่</button> 
+    <div class="app-container">
+        
+        <header class="app-header">
+            <div id="weather-display" class="hidden">
+                <span id="weather-icon"></span>
+                <span id="weather-text"></span>
+            </div>
+            <div id="player-stats">
+                <div class="stat-item prestige-display">
+                    <span id="prestige-icon"></span>
+                    <span id="player-level">LV 1</span>
+                </div>
+                <div class="stat-item">
+                    <span title="เล่นต่อเนื่อง" id="streak">🔥 0</span>
+                </div>
+                <div class="stat-item">
+                    <span title="Study Coins" id="coins">🪙 0</span>
+                </div>
+            </div>
+            <div class="exp-bar-container">
+                <div id="exp-bar"></div>
+                <span id="exp-text">0/100</span>
+            </div>
+        </header>
+        
+        <main class="app-main">
+            <div id="board-container">
+                <div id="bingo-board"></div>
+            </div>
+        </main>
+        
+        <footer class="app-footer">
+            <div id="inventory-display">
+                <h3>ไอเทม</h3>
+                <div id="inventory-items"></div>
+            </div>
+            <div id="controls">
+                <button id="skill-btn">สกิล (<span id="skill-points-display">0</span>)</button>
+                <button id="shop-btn">ร้านค้า</button>
+                <button id="prestige-btn" class="hidden">จุติ</button>
+                <button id="new-board-btn" class="hidden">บอร์ดใหม่</button>
+            </div>
+        </footer>
+        
     </div>
 
     <div id="modal-container" class="hidden">
@@ -52,7 +65,7 @@
         </div>
     </div>
     
-    <div id="level-up-notice" class="hidden"></div>
+    <div id="game-notice" class="hidden"></div>
 
     <script src="script.js"></script>
 </body>
