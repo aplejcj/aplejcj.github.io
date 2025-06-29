@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Quest Bingo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+
+    <div id="player-stats">
+        <div class="stat-item">
+            <span>LV</span>
+            <span id="level">1</span>
+        </div>
+        <div class="stat-item exp-bar-container">
+            <div id="exp-bar"></div>
+            <span id="exp-text">0/100</span>
+        </div>
+        <div class="stat-item">
+            <span id="streak">🔥 0</span>
+        </div>
+        <div class="stat-item">
+            <span>🪙</span>
+            <span id="coins">0</span>
+        </div>
+    </div>
+
+    <div id="board-container">
+        <div id="bingo-board"></div>
+    </div>
+
+    <div id="controls">
+        <button id="task-btn">คลังเควสต์</button>
+        <button id="skill-btn">สกิล</button>
+        <button id="shop-btn">ร้านค้า</button>
+    </div>
+
+    <div id="modal-container" class="hidden">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div id="level-up-notice" class="hidden">LEVEL UP!</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
