@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body class="theme-dark">
+<body>
+    <div class="background-animation"></div>
 
     <div id="player-stats">
         <div class="stat-item">
@@ -21,21 +22,24 @@
             <span id="exp-text">0/100</span>
         </div>
         <div class="stat-item">
-            <span id="streak">🔥 0</span>
+            <span title="เล่นต่อเนื่อง" id="streak">🔥 0</span>
         </div>
         <div class="stat-item">
-            <span>🪙</span>
-            <span id="coins">0</span>
+            <span title="Study Coins" id="coins">🪙 0</span>
         </div>
     </div>
 
     <div id="board-container">
         <div id="bingo-board"></div>
     </div>
+    
+    <div id="inventory-display">
+        <h3>ไอเทม</h3>
+        <div id="inventory-items"></div>
+    </div>
 
     <div id="controls">
-        <button id="task-btn">คลังเควสต์</button>
-        <button id="skill-btn">สกิล</button>
+        <button id="skill-btn">สกิล (<span id="skill-points-display">0</span>)</button>
         <button id="shop-btn">ร้านค้า</button>
     </div>
 
@@ -47,7 +51,7 @@
         </div>
     </div>
     
-    <div id="level-up-notice" class="hidden">LEVEL UP!</div>
+    <div id="level-up-notice" class="hidden"></div>
 
     <script src="script.js"></script>
 </body>
