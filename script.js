@@ -20,8 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const shopContentEl = document.getElementById('shop-content');
     const navButtons = document.querySelectorAll('.nav-btn');
     const backButtons = document.querySelectorAll('.back-btn');
+    const modalContainer = document.getElementById('modal-container');
+    const modalTitleEl = document.getElementById('modal-title');
+    const modalBodyEl = document.getElementById('modal-body');
 
-    // --- GAME CONFIG & DATA (REBALANCED) ---
+    // --- GAME CONFIG & DATA ---
+    const CURRENT_DATA_VERSION = "5.1.0"; 
     const LEVEL_EXP_BASE = 100;
     const PRESTIGE_LEVEL = 50;
     const QUEST_TIERS = { 'C': { points: 15 }, 'B': { points: 25 }, 'A': { points: 50 }, 'S': { points: 100 } };
@@ -48,13 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let board = [];
     let isRerolling = false;
     let isMarking = false;
+    let hasBingo = false;
 
     const defaultPlayer = () => ({
+        version: CURRENT_DATA_VERSION,
         level: 1, exp: 0, coins: 100, streak: 0, skillPoints: 0, prestige: 0,
         lastLogin: null,
         skills: { phys: 0, math: 0, read: 0 },
         inventory: { reroll: 0, exp_potion: 0, bingo_marker: 0 },
-        challengeQuest: null,
         weather: STUDY_WEATHER.clear,
         firstQuestToday: true,
     });
@@ -66,15 +71,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- CORE FUNCTIONS ---
-    function saveData() { localStorage.setItem('studyBingoFlow_v3', JSON.stringify({player, board})); }
+    function saveData() { localStorage.setItem('studyBingoFlow_Final', JSON.stringify({player, board, hasBingo})); }
     
     function loadData() {
-        const saved = localStorage.getItem('studyBingoFlow_v3');
+        const saved = localStorage.getItem('studyBingoFlow_Final');
         if (saved) {
             const gameState = JSON.parse(saved);
-            player = gameState.player;
-            board = gameState.board;
-            if (!board || board.length !== 16) generateBoard();
+            if (!gameState.player.version || gameState.player.version !== CURRENT_DATA_VERSION) {
+                player = defaultPlayer();
+                generateBoard();
+                alert("มีการอัปเดตครั้งใหญ่! ข้อมูลเกมของคุณจะเริ่มต้นใหม่เพื่อประสบการณ์ที่ดีที่สุดครับ");
+            } else {
+                player = gameState.player;
+                board = gameState.board;
+                hasBingo = gameState.hasBingo || false;
+                if (!board || board.length !== 16) generateBoard();
+            }
         } else {
             player = defaultPlayer();
             generateBoard();
@@ -103,12 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
         board = [];
         for (let i = 0; i < 4 * 4; i++) {
             let task = availableTasks[Math.floor(Math.random() * availableTasks.length)];
-            board.push({ ...task, completed: false, index: i, isChallenge: false });
+            board.push({ ...task, completed: false, index: i });
         }
-        if (player.level >= 5 && Math.random() < 0.15) {
-            const challengeIndex = Math.floor(Math.random() * board.length);
-            board[challengeIndex] = { text: 'เควสต์ท้าทาย!', tier: 'S', subject: 'พิเศษ', completed: false, index: challengeIndex, isChallenge: true, accepted: false };
-        }
+        hasBingo = false;
+        newBoardBtn.classList.add('hidden');
         renderBoard();
         saveData();
     }
@@ -117,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
         boardEl.innerHTML = board.map(task => {
             let classes = 'cell';
             if (task.completed) classes += ' completed';
-            if (task.isChallenge && !task.completed) classes += ' challenge';
             return `<div class="${classes}" data-index="${task.index}">
                 <span class="task-text">${task.text}</span>
             </div>`;
@@ -177,6 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkForBingo() {
+        if (hasBingo) return;
         const lines = [[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,4,8,12],[1,5,9,13],[2,6,10,14],[3,7,11,15],[0,5,10,15],[3,6,9,12]];
         let bingoFound = false;
         lines.forEach(line => {
@@ -188,15 +198,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         });
-
         if (bingoFound) {
+            hasBingo = true;
             let bonusCoins = 100; let bonusExp = 50;
             if(player.skills.phys >= 3) bonusCoins *= 1.2;
             player.coins += Math.round(bonusCoins); player.exp += Math.round(bonusExp);
             showNotice(`BINGO! <br> +${Math.round(bonusCoins)} 🪙 & ${Math.round(bonusExp)} EXP`);
-            newBoardBtn.classList.remove('hidden');
+            setTimeout(() => newBoardBtn.classList.remove('hidden'), 1500);
             updateUI();
         }
+    }
+
+    function showModal(title, content) {
+        modalTitleEl.innerText = title;
+        modalBodyEl.innerHTML = content;
+        modalContainer.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modalContainer.classList.add('hidden');
     }
 
     function renderInventory() {
@@ -283,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContentEl.addEventListener('click', (e) => {
         const buyBtn = e.target.closest('.buy-btn');
         if (buyBtn) {
+            buyBtn.disabled = true; // Prevent double click
             const itemId = buyBtn.dataset.itemId;
             const item = SHOP_ITEMS[itemId];
             if (player.coins >= item.cost) {
@@ -296,14 +317,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     boardEl.addEventListener('click', (e) => {
         const cell = e.target.closest('.cell');
-        if (!cell) return;
+        if (!cell || hasBingo) return;
         const index = parseInt(cell.dataset.index);
         let task = board[index];
         if (task.completed && !isRerolling) return;
 
         if (isRerolling) {
             let availableTasks = [...tasks.phys, ...tasks.math, ...tasks.read];
-            board[index] = { ...availableTasks[Math.floor(Math.random() * availableTasks.length)], completed: false, index: index, isChallenge: false };
+            board[index] = { ...availableTasks[Math.floor(Math.random() * availableTasks.length)], completed: false, index: index };
             isRerolling = false;
             document.body.classList.remove('rerolling');
             renderBoard();
@@ -321,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         task.completed = true;
-        renderBoard(); // Render first to show completion
+        renderBoard();
         addExp(QUEST_TIERS[task.tier].points, task.subject);
         checkForBingo();
     });
@@ -350,7 +371,29 @@ document.addEventListener('DOMContentLoaded', () => {
     
     prestigeBtn.addEventListener('click', () => {
         if (player.level < PRESTIGE_LEVEL) return;
-        showPage('page-prestige');
+        showModal('ยืนยันการจุติ', `
+            <p>คุณแน่ใจหรือไม่ที่จะทำการ "จุติ"?</p>
+            <p style="color: var(--warning-color);">เลเวล, สกิล, Coins, และแต้มสกิล จะถูกรีเซ็ตทั้งหมด</p>
+            <p>คุณจะได้รับโบนัส EXP/Coins +5% ต่อระดับศักดิ์ศรีอย่างถาวร!</p>
+            <button id="confirm-prestige-btn" class="danger-btn">ยืนยันการจุติ</button>
+        `);
+        document.getElementById('confirm-prestige-btn').onclick = () => {
+            let oldPrestige = player.prestige || 0;
+            const oldInventory = { ...player.inventory };
+            const oldStreak = player.streak;
+            const oldLastLogin = player.lastLogin;
+            
+            player = defaultPlayer();
+            player.prestige = oldPrestige + 1;
+            player.inventory = oldInventory;
+            player.streak = oldStreak;
+            player.lastLogin = oldLastLogin;
+
+            showNotice(`จุติสำเร็จ! ระดับ ${player.prestige}`);
+            closeModal();
+            generateBoard();
+            updateUI();
+        };
     });
 
     newBoardBtn.addEventListener('click', () => {
@@ -358,6 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
         generateBoard();
         newBoardBtn.classList.add('hidden');
     });
+    
+    document.querySelector('.close-modal-btn').addEventListener('click', closeModal);
 
     // --- INITIALIZATION ---
     function init() {

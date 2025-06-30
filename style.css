@@ -24,8 +24,15 @@ html, body {
 body {
     font-family: var(--font-main);
     color: var(--primary-text);
+    display: flex; /* Changed for centering */
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
     -webkit-tap-highlight-color: transparent;
 }
+
+body.rerolling .cell:not(.completed):not(.challenge) { cursor: crosshair; border-style: dashed; }
+body.marking .cell:not(.completed) { cursor: crosshair; border-style: dotted; border-color: var(--success-color); }
 
 .background-animation {
     position: fixed; top: 0; left: 0; width: 200%; height: 200%;
@@ -40,8 +47,11 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    max-width: 500px; /* Max width for app-like feel on desktop */
+    max-width: 500px; 
     margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .page {
@@ -55,16 +65,20 @@ body {
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
+    z-index: 1;
 }
-.page.active { transform: translateX(0); }
-#page-main { transform: translateX(0); } /* Main page starts visible */
+.page.active { transform: translateX(0); z-index: 10; }
+#page-main { transform: translateX(0); z-index: 5; }
 
 /* --- Main Game Page --- */
 .app-container {
     width: 100%;
+    max-width: 450px;
     height: 100%;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
+    max-height: 950px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
     gap: 15px;
     padding: 10px;
 }
@@ -73,11 +87,25 @@ body {
     border-radius: 16px;
     padding: 15px;
     border: 1px solid #333;
+    flex-shrink: 0;
 }
-.app-main { display: flex; justify-content: center; align-items: center; }
-.app-footer { display: flex; flex-direction: column; gap: 10px; }
+.app-main { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    flex-grow: 1;
+}
+.app-footer { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+    flex-shrink: 0;
+}
 
-#weather-display { padding: 5px 12px; font-size: 0.9em; display: inline-flex; gap: 10px; margin-bottom: 15px; border-radius: 20px; background-color: rgba(0,0,0,0.3); }
+#weather-display, #player-stats, #inventory-display, #controls button {
+    border-radius: 12px;
+}
+#weather-display { padding: 5px 12px; font-size: 0.9em; display: inline-flex; gap: 10px; margin-bottom: 15px; background-color: rgba(0,0,0,0.3); }
 #player-stats { display: flex; justify-content: space-between; align-items: center; }
 .stat-item { font-weight: 500; font-size: 1.2em; }
 .prestige-display, #coins, #streak { font-weight: 700; }
@@ -85,7 +113,7 @@ body {
 .exp-bar-container { width: 100%; height: 24px; background-color: #0003; border-radius: 8px; position: relative; margin-top: 15px; }
 #exp-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-color), var(--success-color)); border-radius: 8px; transition: width 0.5s ease; }
 #exp-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8em; color: white; text-shadow: 1px 1px 2px black; }
-#board-container { width: 100%; aspect-ratio: 1 / 1; }
+#board-container { width: 100%; aspect-ratio: 1 / 1; max-width: 450px; }
 #bingo-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(5px, 2vw, 8px); width: 100%; height: 100%; }
 .cell {
     background-color: var(--surface-color); border: 1px solid #333; border-radius: 12px;
@@ -98,7 +126,7 @@ body {
 .cell.bingo { animation: bingoLineAnimation 1.2s ease-in-out infinite alternate; }
 .cell.challenge { border: 2px solid var(--danger-color); }
 .cell .task-text { font-size: clamp(0.7em, 2.8vw, 0.9em); margin-bottom: 5px; color: var(--primary-text);}
-#inventory-display { padding: 10px; background-color: var(--surface-color); border: 1px solid #333; border-radius: 12px; }
+#inventory-display { padding: 10px; background-color: var(--surface-color); border: 1px solid #333; }
 #inventory-items { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; min-height: 24px; }
 .inventory-item { background: #333; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.9em; }
 #controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -134,6 +162,11 @@ button { font-family: var(--font-main); color: var(--accent-color); border: 1px 
 button:disabled { background: var(--surface-color); border-color: var(--disabled-color); color: var(--disabled-color); cursor: not-allowed; }
 #game-notice { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: linear-gradient(45deg, var(--accent-color), var(--warning-color)); color: white; padding: 20px 40px; border-radius: 50px; font-size: 1.5em; font-weight: 700; z-index: 200; animation: levelUpAnimation 2.5s ease forwards; text-align: center; }
 #game-notice.hidden { display: none; }
+.modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s ease; }
+.modal-container.hidden { display: none; }
+.modal-content { background-color: var(--surface-color); padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid #444; }
+.close-modal-btn { position: absolute; top: 10px; right: 15px; font-size: 2em; background: none; border: none; color: var(--secondary-text); cursor: pointer; z-index: 101; }
+#modal-body .danger-btn { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
 
 @keyframes bingoLineAnimation { 0% { background-color: var(--accent-color); } 50% { background-color: var(--warning-color); } 100% { background-color: var(--accent-color); } }
 @keyframes move-background { from { transform: translate(0, 0); } to { transform: translate(-50px, -50px); } }
